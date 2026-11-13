@@ -1,0 +1,14 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+
+$root = dirname(__DIR__);
+$autoload = is_file($root . '/vendor/autoload.php')
+    ? $root . '/vendor/autoload.php'
+    : dirname($root, 2) . '/autoload.php';
+if (!is_file($autoload)) {
+    fwrite(STDERR, "Run composer install first.\n");
+    exit(1);
+}
+require $autoload;
+exit(JobCenter\Runner::main($argv));

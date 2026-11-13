@@ -1,0 +1,38 @@
+{
+  "name": "glassjob/job-executor-php",
+  "description": "GlassJob Executor PHP SDK (WebSocket protocol 1.1)",
+  "type": "project",
+  "license": "proprietary",
+  "require": {
+    "php": ">=8.4",
+    "ext-json": "*",
+    "ext-openssl": "*",
+    "phrity/websocket": "^4.1",
+    "symfony/process": "^8.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "JobCenter\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "JobCenter\\Tests\\": "tests/"
+    }
+  },
+  "bin": [
+    "bin/jobcenter-worker",
+    "bin/jobcenter-runner"
+  ],
+  "config": {
+    "process-timeout": 0,
+    "sort-packages": true
+  },
+  "scripts": {
+    "start": "@php worker.php",
+    "test": "phpunit"
+  }
+}
