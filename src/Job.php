@@ -28,8 +28,3 @@ final class Job
         }
     }
 }
-
-interface JobHandler
-{
-    public function handle(JobContext $job): void;
-}
