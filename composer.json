@@ -2,7 +2,7 @@
   "name": "glassjob/job-executor-php",
   "description": "GlassJob Executor PHP SDK (WebSocket protocol 1.1)",
   "type": "project",
-  "license": "proprietary",
+  "license": "Apache-2.0",
   "require": {
     "php": ">=8.4",
     "ext-json": "*",

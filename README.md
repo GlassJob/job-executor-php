@@ -78,3 +78,7 @@ final class MyJobHandler implements JobCenter\JobHandler
     }
 }
 ```
+
+## License
+
+本项目采用 [Apache License 2.0](LICENSE)。第三方依赖仍按各自许可证授权，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。分发包含 `vendor/` 的安装包或镜像时，请保留依赖的版权与许可声明。
