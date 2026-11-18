@@ -9,6 +9,7 @@ declare(strict_types=1);
  * Read-only commands: services, jobs, executions, get, logs
  * Mutations require an explicit verb: trigger, cancel
  *
+ * Fill in the Config() placeholders below before calling the API.
  *   php examples/php-http-client/client.php services
  *   php examples/php-http-client/client.php trigger --service-code sdk.demo --job-code demo.hello
  */
@@ -16,14 +17,11 @@ declare(strict_types=1);
 $root = dirname(__DIR__, 2);
 require $root . '/vendor/autoload.php';
 
-use JobCenter\EnvLoad;
 use JobCenter\Http\ApiException;
 use JobCenter\Http\Client;
 use JobCenter\Http\Config;
 use JobCenter\Http\InvalidConfigException;
 use JobCenter\Http\TransportException;
-
-EnvLoad::loadFirst(...EnvLoad::candidatePaths());
 
 $args = array_slice($argv, 1);
 $command = $args[0] ?? 'help';
@@ -47,13 +45,8 @@ Mutations (must be named explicitly):
   trigger --service-code CODE --job-code CODE [--params JSON] [--idempotency-key K] [--instance-id ID]
   cancel  --service-id ID --job-id ID --execution-id ID [--reason TEXT]
 
-Config (distinct from Executor JC_CREDENTIAL_*):
-  JC_HTTP_BASE_URL          default http://127.0.0.1:8080
-  JC_HTTP_CLIENT_ID
-  JC_HTTP_CLIENT_SECRET
-  JC_HTTP_OPERATOR_ID       optional
-  JC_HTTP_OPERATOR_NAME     optional
-  JC_HTTP_TIMEOUT_SECONDS   optional
+Edit the Config() placeholders in this file (baseUrl, clientId, clientSecret).
+Do not reuse Executor JC_CREDENTIAL_*. This example does not read the environment.
 
 Log streaming over SSE is not supported by Job Center; use the logs command (chunk).
 
@@ -61,8 +54,17 @@ TXT);
     exit(0);
 }
 
+// Fill in Admin HTTP client settings explicitly. This example does not load .env or JC_HTTP_*.
+$cfg = new Config(
+    baseUrl: 'http://127.0.0.1:8080',
+    clientId: '00000000-0000-0000-0000-000000000000',
+    clientSecret: 'replace-with-admin-client-secret',
+    operatorId: '',
+    operatorName: '',
+    timeoutSeconds: 15.0,
+);
+
 try {
-    $cfg = Config::fromEnv();
     $client = new Client($cfg);
     $code = runCommand($client, $command, $opts);
     exit($code);

@@ -82,10 +82,14 @@ final class MyJobHandler implements JobCenter\JobHandler
 
 ## Admin HTTP 客户端
 
-同一 Composer 包还提供管理面 HTTP 客户端 `JobCenter\Http\Client`，与 Executor `JobCenter\Client` / Worker 互相独立：构造时不会联网，也不会启动 Worker。凭据必须使用 **Admin 客户端**（`clients` 表 / `JC_HTTP_CLIENT_*`），不要复用执行器 `JC_CREDENTIAL_*`。
+同一 Composer 包还提供管理面 HTTP 客户端 `JobCenter\Http\Client`，与 Executor `JobCenter\Client` / Worker 互相独立：构造时不会联网，也不会启动 Worker。凭据必须使用 **Admin 客户端**（`clients` 表），通过构造函数显式传入，不要复用执行器 `JC_CREDENTIAL_*`，HTTP 客户端也不读取环境变量。
 
 ```php
-$http = new JobCenter\Http\Client(JobCenter\Http\Config::fromEnv());
+$http = new JobCenter\Http\Client(new JobCenter\Http\Config(
+    baseUrl: 'http://127.0.0.1:8080',
+    clientId: '00000000-0000-0000-0000-000000000000',
+    clientSecret: 'replace-with-admin-client-secret',
+));
 $svc = $http->findServiceByCode('sdk.demo');
 $job = $http->findJobByCode($svc['id'], 'demo.hello');
 $created = $http->triggerExecution(
@@ -100,7 +104,7 @@ $logs = $http->getExecutionLogs($svc['id'], $job['id'], $created['execution_id']
 
 也可 `triggerExecutionByCode('sdk.demo', 'demo.hello', ...)`。手动触发对应 `POST /v1/admin/services/{serviceId}/jobs/{jobId}/executions`（可带 `params` / `idempotency_key` / `instance_id`）；取消为 `POST .../executions/{executionId}/cancel`。日志仅支持 chunk 拉取（`GET .../logs?after=&limit=`），**当前 Job Center 没有 SSE 接口，本客户端也不提供 SSE**。
 
-可运行示例（默认只打印用法，不会调接口；写操作必须显式给出 `trigger` / `cancel`）：
+可运行示例：先在 `examples/php-http-client/client.php` 里填入 `Config` 占位符，再执行命令。默认只打印用法，不会调接口；写操作必须显式给出 `trigger` / `cancel`。
 
 ```bash
 php examples/php-http-client/client.php
@@ -110,12 +114,12 @@ php examples/php-http-client/client.php trigger --service-code sdk.demo --job-co
 
 | 字段 | 说明 |
 |------|------|
-| `baseUrl` / `JC_HTTP_BASE_URL` | `http(s)://127.0.0.1:8080`（不要用 WS 地址） |
-| `clientId` / `JC_HTTP_CLIENT_ID` | Admin 客户端 ID |
-| `clientSecret` / `JC_HTTP_CLIENT_SECRET` | Admin HMAC secret（不进请求体） |
-| `operatorId` / `JC_HTTP_OPERATOR_ID` | 可选，空字符串仍参与签名 |
-| `operatorName` / `JC_HTTP_OPERATOR_NAME` | 可选，空字符串仍参与签名 |
-| `timeoutSeconds` / `JC_HTTP_TIMEOUT_SECONDS` | 请求超时（默认 15s） |
+| `baseUrl` | `http(s)://127.0.0.1:8080`（不要用 WS 地址） |
+| `clientId` | Admin 客户端 ID |
+| `clientSecret` | Admin HMAC secret（不进请求体） |
+| `operatorId` | 可选，空字符串仍参与签名 |
+| `operatorName` | 可选，空字符串仍参与签名 |
+| `timeoutSeconds` | 请求超时（默认 15s） |
 
 签名与中心 `security.md` 一致：`HMAC-SHA256(secret, METHOD\\nPATH\\nQUERY\\n...)`，QUERY 按 key/value 排序并做 RFC3986 编码。HTTP 传输使用 PHP 流套接字，**不要求** `ext-curl`。客户端不会自动重试 POST（触发 / 取消）。
 

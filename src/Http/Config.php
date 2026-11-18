@@ -5,6 +5,7 @@ namespace JobCenter\Http;
 
 /**
  * Admin HTTP client configuration. Distinct from Executor WS credentials.
+ * Pass values explicitly to the constructor; this class does not read the environment.
  */
 final class Config
 {
@@ -25,29 +26,11 @@ final class Config
         return $this->clientSecret;
     }
 
-    /**
-     * Read JC_HTTP_* variables only. Never falls back to executor JC_CREDENTIAL_*.
-     */
-    public static function fromEnv(): self
-    {
-        $timeout = self::env('JC_HTTP_TIMEOUT_SECONDS', '');
-        $cfg = new self(
-            baseUrl: self::env('JC_HTTP_BASE_URL', 'http://127.0.0.1:8080'),
-            clientId: self::env('JC_HTTP_CLIENT_ID', ''),
-            clientSecret: self::env('JC_HTTP_CLIENT_SECRET', ''),
-            operatorId: self::env('JC_HTTP_OPERATOR_ID', ''),
-            operatorName: self::env('JC_HTTP_OPERATOR_NAME', ''),
-            timeoutSeconds: $timeout !== '' && is_numeric($timeout) ? (float) $timeout : 15.0,
-        );
-        $cfg->validate();
-        return $cfg;
-    }
-
     public function validate(): void
     {
         $this->baseUrl = rtrim(trim($this->baseUrl), '/');
         if ($this->baseUrl === '') {
-            throw new InvalidConfigException('JC_HTTP_BASE_URL / baseUrl is required');
+            throw new InvalidConfigException('baseUrl is required');
         }
         $parts = parse_url($this->baseUrl);
         if ($parts === false || empty($parts['scheme']) || empty($parts['host'])) {
@@ -62,7 +45,7 @@ final class Config
         }
         $this->clientId = trim($this->clientId);
         if ($this->clientId === '' || $this->clientSecret === '') {
-            throw new InvalidConfigException('clientId and clientSecret are required (JC_HTTP_CLIENT_ID / JC_HTTP_CLIENT_SECRET)');
+            throw new InvalidConfigException('clientId and clientSecret are required');
         }
         if ($this->timeoutSeconds <= 0) {
             throw new InvalidConfigException('timeoutSeconds must be greater than 0');
@@ -82,14 +65,5 @@ final class Config
             'operatorName' => $this->operatorName,
             'timeoutSeconds' => $this->timeoutSeconds,
         ];
-    }
-
-    public static function env(string $key, string $default = ''): string
-    {
-        $v = getenv($key);
-        if ($v === false || $v === '') {
-            return $default;
-        }
-        return $v;
     }
 }
