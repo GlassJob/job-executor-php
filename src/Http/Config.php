@@ -9,7 +9,7 @@ namespace JobCenter\Http;
  */
 final class Config
 {
-    public const USER_AGENT = 'glassjob-job-executor-php-http/0.2.0';
+    public const USER_AGENT = 'glassjob-job-executor-php-http/0.3.0';
 
     public function __construct(
         public string $baseUrl = 'http://127.0.0.1:8080',

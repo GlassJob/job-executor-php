@@ -5,7 +5,7 @@ namespace JobCenter;
 
 final class Config
 {
-    public const SDK_VERSION = '0.2.0';
+    public const SDK_VERSION = '0.3.0';
 
     public string $endpoint = '';
     public string $serviceCode = '';
@@ -15,7 +15,7 @@ final class Config
     public string $environment = 'dev';
     public string $instanceKey = '';
     public int $maxConcurrency = 0;
-    public string $version = '0.2.0';
+    public string $version = '0.3.0';
     public string $gitCommit = '';
     public string $buildTime = '';
     public float $shutdownTimeoutSeconds = 30.0;
