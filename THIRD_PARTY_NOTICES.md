@@ -4,9 +4,13 @@ The project code is licensed under Apache-2.0. Composer dependencies remain unde
 
 This inventory covers production and development packages pinned in `composer.lock`. Dependencies are installed by Composer and are not vendored in Git. If distributing an installation or container containing them, retain their license and copyright notices. Available upstream license texts are reproduced below.
 
-## Audit qualification
+## phrity/comparison provenance
 
-`phrity/comparison` 1.4.1 declares MIT in its Composer metadata, but its installed distribution and the root of the pinned upstream source contain no standalone LICENSE, COPYING or NOTICE file. No copyright holder or missing license text has been invented here. Before redistributing bundled copies of this dependency, obtain and preserve its upstream copyright and MIT notice. [Pinned upstream metadata](https://github.com/sirn-se/phrity-comparison/blob/cf80abb822537eeaaeb4142157cd667ca6372a13/composer.json).
+`phrity/comparison` 1.4.1 declares MIT in its pinned Composer metadata but omits the license text. Upstream subsequently added an explicit MIT license in commit `b01b6d6bdff9bc5c04168da999a826c36600e753` (2026-09-25). Comparing the locked commit `cf80abb822537eeaaeb4142157cd667ca6372a13` to that license-addition commit shows changes only to CI, README, Composer metadata and LICENSE; no source or test files changed. The upstream notice for the unchanged source is preserved below, without changing the dependency version or relicensing it.
+
+- [Pinned MIT declaration](https://github.com/sirn-se/phrity-comparison/blob/cf80abb822537eeaaeb4142157cd667ca6372a13/composer.json)
+- [Upstream license addition](https://github.com/sirn-se/phrity-comparison/commit/b01b6d6bdff9bc5c04168da999a826c36600e753)
+- [Source comparison](https://github.com/sirn-se/phrity-comparison/compare/cf80abb822537eeaaeb4142157cd667ca6372a13...b01b6d6bdff9bc5c04168da999a826c36600e753)
 
 ## Production dependencies
 
@@ -62,6 +66,32 @@ This inventory covers production and development packages pinned in `composer.lo
 | `theseer/tokenizer` | `1.3.1` | BSD-3-Clause |
 
 ## Upstream license texts
+
+### phrity/comparison 1.4.1 — subsequently supplied upstream LICENSE
+
+```text
+MIT License
+
+Copyright (c) 2025 Sören Jensen
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
 ### nyholm/psr7 1.8.2 — LICENSE
 
