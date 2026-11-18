@@ -1,6 +1,6 @@
 # job-executor-php
 
-GlassJob Executor PHP SDK（WebSocket 协议 **1.1**）。克隆后 `composer install`，复制 `.env.example` → `.env` 填入凭据即可独立运行。
+GlassJob Executor PHP SDK（WebSocket 协议 **1.1**）。克隆后 `composer install`，在 `worker.php` 里显式填入 `JobCenter\Config` 即可独立运行。执行器与 HTTP 客户端都不读取环境变量，也没有 `fromEnv()`。
 
 父进程 Worker 负责连中心、鉴权与上报；任务在子进程 Runner 中执行（不依赖 Swoole / PHP-FPM）。
 
@@ -12,7 +12,7 @@ GlassJob Executor PHP SDK（WebSocket 协议 **1.1**）。克隆后 `composer in
 - `JobContext`：`bindState` / `checkpoint` / `setNextState`（对接中心 `job_states.key=default`）
 - `$job->log()`：独立上报 `task.log`（默认不打本机；缓冲 100 / 1s flush）
 - `task.cancel` → cancel_ack / cancelled（配合 Admin 取消）
-- WS 断线续跑：子进程任务不随断线取消；重连 `task.sync_running`；终态写入 `{JC_DATA_DIR}/pending_results` 直至 `result_ack OK`
+- WS 断线续跑：子进程任务不随断线取消；重连 `task.sync_running`；终态写入 `{dataDir}/pending_results`（默认 `./data`）直至 `result_ack OK`
 
 示例 Job：`demo.hello` / `demo.fail` / `demo.sleep` / `demo.timeout` / `demo.counter`（状态累加）/ `demo.progress` / `demo.logs`
 
@@ -22,11 +22,11 @@ GlassJob Executor PHP SDK（WebSocket 协议 **1.1**）。克隆后 `composer in
 
 ```bash
 composer install
-cp .env.example .env   # 填入 JC_CREDENTIAL_ID / JC_CREDENTIAL_SECRET 或 JC_CREDENTIAL
+# 编辑 worker.php 中的 JobCenter\Config 占位符（endpoint / serviceCode / 凭据）
 php worker.php
 ```
 
-示例会自动加载 `.env`（真实环境变量优先）。
+不要复制 `.env` 或设置 `JC_*` 环境变量来启动。也可把返回 `JobCenter\Config` 的 PHP 文件传给入口：`php worker.php /path/to/config.php`，或 `bin/jobcenter-worker /path/to/config.php`。合并形式凭据可在配置里显式赋值 `$cfg->credential = 'jcs_<id>.<secret>'`，再由 `applyDefaults()` 解析（`Client` 构造时会调用）。
 
 Admin 触发：`POST /v1/admin/services/:serviceId/jobs/:jobId/executions`  
 取消：`POST .../executions/:executionId/cancel`（`demo.sleep` 便于联调）
@@ -35,12 +35,13 @@ Admin 触发：`POST /v1/admin/services/:serviceId/jobs/:jobId/executions`
 
 | 字段 | 说明 |
 |------|------|
-| `Endpoint` / `JC_WS_ENDPOINT` | `ws(s)://.../v1/executor/ws` |
-| `ServiceCode` / `JC_SERVICE_CODE` | 服务业务编码 `code` |
-| `CredentialID` / `CredentialSecret` | 凭据（`JC_CREDENTIAL_ID` / `JC_CREDENTIAL_SECRET`） |
-| `Credential` / `JC_CREDENTIAL` | 可选 `jcs_<id>.<secret>` |
-| `InstanceKey` / `JC_INSTANCE_KEY` | 稳定实例键（≤128） |
-| `DataDir` / `JC_DATA_DIR` | 终态 pending 目录（默认 `./data`） |
+| `endpoint` | `ws(s)://.../v1/executor/ws` |
+| `serviceCode` | 服务业务编码 `code` |
+| `credentialId` / `credentialSecret` | 执行器凭据（`service_credentials`） |
+| `credential` | 可选合并形式 `jcs_<id>.<secret>`，由 `applyDefaults()` 拆成 id 与 secret |
+| `instanceKey` | 稳定实例键（≤128） |
+| `dataDir` | 终态 pending 目录（默认 `./data`） |
+| `environment` | 默认 `dev` |
 
 协议类型与 center `pkg/protocol` 以及 `job-executor-go` 对齐。PHP ≥ 8.4。
 
@@ -52,7 +53,13 @@ Admin 触发：`POST /v1/admin/services/:serviceId/jobs/:jobId/executions`
 ## 在业务项目中使用
 
 ```php
-$cfg = JobCenter\Config::fromEnv();
+$cfg = new JobCenter\Config();
+$cfg->endpoint = 'ws://127.0.0.1:8080/v1/executor/ws';
+$cfg->serviceCode = 'sdk.demo';
+$cfg->credentialId = '00000000-0000-0000-0000-000000000000';
+$cfg->credentialSecret = 'replace-with-executor-credential-secret';
+// 或：$cfg->credential = 'jcs_<id>.<secret>';
+$cfg->instanceKey = 'php-executor-1';
 $client = new JobCenter\Client($cfg);
 $client->registerJob(new JobCenter\Job(
     code: 'my.job',
@@ -82,7 +89,7 @@ final class MyJobHandler implements JobCenter\JobHandler
 
 ## Admin HTTP 客户端
 
-同一 Composer 包还提供管理面 HTTP 客户端 `JobCenter\Http\Client`，与 Executor `JobCenter\Client` / Worker 互相独立：构造时不会联网，也不会启动 Worker。凭据必须使用 **Admin 客户端**（`clients` 表），通过构造函数显式传入，不要复用执行器 `JC_CREDENTIAL_*`，HTTP 客户端也不读取环境变量。
+同一 Composer 包还提供管理面 HTTP 客户端 `JobCenter\Http\Client`，与 Executor `JobCenter\Client` / Worker 互相独立：构造时不会联网，也不会启动 Worker。凭据必须使用 **Admin 客户端**（`clients` 表），通过构造函数显式传入，不要复用执行器 `credentialId` / `credentialSecret`，两者也都不读取环境变量。
 
 ```php
 $http = new JobCenter\Http\Client(new JobCenter\Http\Config(

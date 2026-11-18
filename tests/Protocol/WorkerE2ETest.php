@@ -51,16 +51,22 @@ final class WorkerE2ETest extends TestCase
             }
             self::assertGreaterThan(0, $port, 'mock center did not publish a port: ' . $server->getErrorOutput());
 
-            $worker = new Process([PHP_BINARY, $root . '/worker.php'], $root, [
-                'JC_WS_ENDPOINT' => "ws://127.0.0.1:{$port}/v1/executor/ws",
-                'JC_SERVICE_CODE' => $service,
-                'JC_CREDENTIAL_ID' => $credId,
-                'JC_CREDENTIAL_SECRET' => $secret,
-                'JC_INSTANCE_KEY' => $instance,
-                'JC_ENVIRONMENT' => 'dev',
-                'JC_DATA_DIR' => $dataDir,
-                'JC_MAX_CONCURRENCY' => '2',
-            ]);
+            $configFile = $dataDir . '/worker-config.php';
+            $endpoint = "ws://127.0.0.1:{$port}/v1/executor/ws";
+            file_put_contents($configFile, '<?php' . "\n" . implode("\n", [
+                '$c = new JobCenter\\Config();',
+                '$c->endpoint = ' . var_export($endpoint, true) . ';',
+                '$c->serviceCode = ' . var_export($service, true) . ';',
+                '$c->credentialId = ' . var_export($credId, true) . ';',
+                '$c->credentialSecret = ' . var_export($secret, true) . ';',
+                '$c->instanceKey = ' . var_export($instance, true) . ';',
+                '$c->environment = \'dev\';',
+                '$c->dataDir = ' . var_export($dataDir, true) . ';',
+                '$c->maxConcurrency = 2;',
+                'return $c;',
+                '',
+            ]));
+            $worker = new Process([PHP_BINARY, $root . '/worker.php', $configFile], $root);
             $worker->start();
 
             $until = microtime(true) + 12;

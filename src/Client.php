@@ -128,13 +128,17 @@ final class Client
         }
     }
 
-    /** CLI entry used by bin/jobcenter-worker (loads .env + builtin jobs). */
+    /** CLI entry used by bin/jobcenter-worker. Requires a PHP file that returns Config. */
     /** @param list<string> $argv */
     public static function main(array $argv): int
     {
-        EnvLoad::loadFirst(...EnvLoad::candidatePaths());
+        $path = $argv[1] ?? '';
+        if ($path === '' || $path === '-h' || $path === '--help') {
+            fwrite(STDERR, "Usage: jobcenter-worker <config.php>\nThe file must return a JobCenter\\Config instance.\n");
+            return 2;
+        }
         try {
-            $cfg = Config::fromEnv();
+            $cfg = Config::loadFromFile($path);
             $client = new self($cfg);
             Jobs\Builtin::register($client);
             $client->start();

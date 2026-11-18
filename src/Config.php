@@ -25,23 +25,19 @@ final class Config
     public string $runnerBin = '';
     public string $phpBinary = PHP_BINARY;
 
-    public static function fromEnv(): self
+    /**
+     * Load a PHP file that returns a Config instance. The file is not an env loader.
+     */
+    public static function loadFromFile(string $path): self
     {
-        $c = new self();
-        $c->endpoint = self::env('JC_WS_ENDPOINT', 'ws://127.0.0.1:8080/v1/executor/ws');
-        $c->serviceCode = self::env('JC_SERVICE_CODE', 'sdk.demo');
-        $c->credentialId = self::env('JC_CREDENTIAL_ID', '');
-        $c->credentialSecret = self::env('JC_CREDENTIAL_SECRET', '');
-        $c->credential = self::env('JC_CREDENTIAL', '');
-        $c->environment = self::env('JC_ENVIRONMENT', 'dev');
-        $c->instanceKey = self::env('JC_INSTANCE_KEY', '');
-        $c->dataDir = self::env('JC_DATA_DIR', '');
-        $mc = self::env('JC_MAX_CONCURRENCY', '');
-        if ($mc !== '' && is_numeric($mc)) {
-            $c->maxConcurrency = (int) $mc;
+        if (!is_file($path)) {
+            throw new \InvalidArgumentException('config file not found: ' . $path);
         }
-        $c->applyDefaults();
-        return $c;
+        $cfg = require $path;
+        if (!$cfg instanceof self) {
+            throw new \InvalidArgumentException('config file must return a JobCenter\\Config instance');
+        }
+        return $cfg;
     }
 
     public function applyDefaults(): void
@@ -109,14 +105,5 @@ final class Config
             throw new \InvalidArgumentException('credential token must be jcs_<id>.<secret>');
         }
         return [substr($rest, 0, $dot), substr($rest, $dot + 1)];
-    }
-
-    public static function env(string $key, string $default = ''): string
-    {
-        $v = getenv($key);
-        if ($v === false || $v === '') {
-            return $default;
-        }
-        return $v;
     }
 }

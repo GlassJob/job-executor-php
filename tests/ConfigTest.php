@@ -50,4 +50,33 @@ final class ConfigTest extends TestCase
         $cfg->applyDefaults();
         self::assertSame(128, strlen($cfg->instanceKey));
     }
+
+    public function testHasNoEnvironmentLoader(): void
+    {
+        self::assertFalse(method_exists(Config::class, 'fromEnv'));
+        self::assertFalse(method_exists(Config::class, 'env'));
+    }
+
+    public function testLoadFromFile(): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'jc-cfg-');
+        file_put_contents($path, <<<'PHP'
+<?php
+$c = new JobCenter\Config();
+$c->endpoint = 'ws://127.0.0.1:8080/v1/executor/ws';
+$c->serviceCode = 'demo';
+$c->credential = 'jcs_id.secret';
+$c->instanceKey = 'k1';
+return $c;
+PHP);
+        try {
+            $cfg = Config::loadFromFile($path);
+            $cfg->applyDefaults();
+            self::assertSame('id', $cfg->credentialId);
+            self::assertSame('secret', $cfg->credentialSecret);
+            self::assertSame('demo', $cfg->serviceCode);
+        } finally {
+            @unlink($path);
+        }
+    }
 }

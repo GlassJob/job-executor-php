@@ -3,7 +3,6 @@
 .phpunit.cache/
 .env
 .env.*
-!.env.example
 *.credentials
 .credentials
 /coverage/

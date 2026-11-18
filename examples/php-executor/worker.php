@@ -7,18 +7,22 @@ require $root . '/vendor/autoload.php';
 
 use JobCenter\Client;
 use JobCenter\Config;
-use JobCenter\EnvLoad;
 use JobCenter\Jobs\Builtin;
 
-EnvLoad::loadFirst(...EnvLoad::candidatePaths());
+// Fill in executor settings explicitly. This example does not load .env or JC_* variables.
+// Optional: php worker.php /path/to/config.php  (the file must return a Config).
+$cfg = new Config();
+$cfg->endpoint = 'ws://127.0.0.1:8080/v1/executor/ws';
+$cfg->serviceCode = 'sdk.demo';
+$cfg->credentialId = '00000000-0000-0000-0000-000000000000';
+$cfg->credentialSecret = 'replace-with-executor-credential-secret';
+// or: $cfg->credential = 'jcs_<id>.<secret>';
+$cfg->instanceKey = 'php-executor-1';
+$cfg->environment = 'dev';
+// $cfg->dataDir = './data';
 
-$cfg = Config::fromEnv();
-if ($cfg->instanceKey === gethostname() . '-' . getmypid()) {
-    $cfg->instanceKey = 'php-executor-1';
-}
-if ($cfg->credentialId === '' || $cfg->credentialSecret === '') {
-    fwrite(STDERR, "缺少凭据：设置 JC_CREDENTIAL_ID + JC_CREDENTIAL_SECRET，或 JC_CREDENTIAL=jcs_<id>.<secret>\n");
-    exit(1);
+if (isset($argv[1]) && $argv[1] !== '' && $argv[1] !== '--help' && $argv[1] !== '-h') {
+    $cfg = Config::loadFromFile($argv[1]);
 }
 
 $client = new Client($cfg);
