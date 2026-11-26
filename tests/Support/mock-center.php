@@ -96,6 +96,20 @@ $server->onText(static function (Server $s, Connection $conn, Text $msg) use (
         return;
     }
 
+    if ($env->type === MessageType::TASK_SYNC_RUNNING) {
+        $attempts = is_array($data['attempts'] ?? null) ? $data['attempts'] : [];
+        $results = [];
+        foreach ($attempts as $a) {
+            if (is_array($a) && isset($a['attempt_id'])) {
+                $results[] = ['attempt_id' => $a['attempt_id'], 'status' => 'OK'];
+            }
+        }
+        $send($conn, MessageType::TASK_SYNC_RUNNING_ACK, [
+            'results' => $results,
+        ]);
+        return;
+    }
+
     if ($env->type === MessageType::SERVICE_HEARTBEAT) {
         $send($conn, MessageType::SERVICE_HEARTBEAT_ACK, [
             'server_time' => Json::now(),

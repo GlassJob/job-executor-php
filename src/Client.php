@@ -644,9 +644,7 @@ final class Client
                 'lease_token' => $rt->leaseToken,
             ];
         }
-        if ($items === []) {
-            return;
-        }
+        // 即使本地没有在跑的任务也要上报，让中心释放掉线前停在派发中的尝试。
         $this->syncAck = null;
         if (!$this->trySessionWrite(MessageType::TASK_SYNC_RUNNING, ['attempts' => $items])) {
             fwrite(STDERR, "sync_running send failed\n");
